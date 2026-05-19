@@ -20,6 +20,21 @@ resource "aws_lambda_function" "this" {
 
   source_code_hash = var.source_code_hash
 
+  lifecycle {
+    precondition {
+      condition = (
+        try(trimspace(var.filename), "") != "" ||
+        (try(trimspace(var.s3_bucket), "") != "" && try(trimspace(var.s3_key), "") != "")
+      )
+      error_message = "Either filename or s3_bucket with s3_key must be provided as a code source."
+    }
+
+    precondition {
+      condition     = !var.snap_start || can(regex("^java", var.runtime))
+      error_message = "snap_start is only supported for Java runtimes (java11, java17, java21)."
+    }
+  }
+
   # PSA Compliance: Req 9 (controlled function concurrency)
   reserved_concurrent_executions = var.reserved_concurrent_executions
 
@@ -31,7 +46,7 @@ resource "aws_lambda_function" "this" {
   }
 
   # PSA Compliance: Req 3.50-01 (environment variable encryption)
-  kms_key_arn = var.kms_key_arn
+  kms_key_arn = var.kms_key_arn != "" ? var.kms_key_arn : null
 
   dynamic "vpc_config" {
     for_each = var.vpc_config != null ? [1] : []
@@ -128,6 +143,13 @@ resource "aws_lambda_function_url" "this" {
   count              = var.enable_function_url ? 1 : 0
   function_name      = aws_lambda_function.this.function_name
   authorization_type = var.function_url_auth_type
+
+  lifecycle {
+    precondition {
+      condition     = var.function_url_auth_type != "NONE" || var.allow_public_function_url
+      error_message = "allow_public_function_url must be true when function_url_auth_type is NONE."
+    }
+  }
 
   dynamic "cors" {
     for_each = var.function_url_cors != null ? [1] : []

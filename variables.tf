@@ -167,7 +167,18 @@ variable "enable_function_url" {
 variable "function_url_auth_type" {
   description = "The type of authentication that your function URL uses (NONE or AWS_IAM)"
   type        = string
-  default     = "AWS_IAM" # Security first: default to IAM
+  default     = "AWS_IAM"
+
+  validation {
+    condition     = contains(["NONE", "AWS_IAM"], var.function_url_auth_type)
+    error_message = "function_url_auth_type must be NONE or AWS_IAM."
+  }
+}
+
+variable "allow_public_function_url" {
+  description = "Explicit opt-in required to create a public (unauthenticated) function URL"
+  type        = bool
+  default     = false
 }
 
 variable "function_url_cors" {
