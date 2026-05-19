@@ -20,7 +20,7 @@ resource "aws_lambda_function" "this" {
 
   source_code_hash = var.source_code_hash
 
-  # PSA Compliance: Concurrency control
+  # PSA Compliance: Req 9 (controlled function concurrency)
   reserved_concurrent_executions = var.reserved_concurrent_executions
 
   dynamic "environment" {
@@ -30,7 +30,7 @@ resource "aws_lambda_function" "this" {
     }
   }
 
-  # PSA Compliance: Environment variable encryption
+  # PSA Compliance: Req 3.50-01 (environment variable encryption)
   kms_key_arn = var.kms_key_arn
 
   dynamic "vpc_config" {
@@ -123,7 +123,7 @@ resource "aws_iam_role_policy" "custom" {
 }
 
 # Lambda Function URL
-# PSA Compliance: Auth type enforcement
+# PSA Compliance: Req 3.01-06 (authenticated function URLs)
 resource "aws_lambda_function_url" "this" {
   count              = var.enable_function_url ? 1 : 0
   function_name      = aws_lambda_function.this.function_name
@@ -164,7 +164,7 @@ resource "aws_lambda_alias" "this" {
 }
 
 # CloudWatch Log Group
-# PSA Compliance: Mandatory logging with optional KMS encryption
+# PSA Compliance: Req 3.66-05 (mandatory logging with optional KMS encryption)
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   count             = var.create_log_group ? 1 : 0
   name              = "/aws/lambda/${var.function_name != "" ? var.function_name : "${local.name_prefix}-lambda"}"

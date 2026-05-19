@@ -5,8 +5,9 @@ locals {
   function_name = var.function_name != "" ? var.function_name : "${local.name_prefix}-lambda"
 
   common_tags = merge(var.tags, {
-    "Project"     = var.project_name
-    "Environment" = var.environment
-    "ManagedBy"   = "Terraform"
+    "Project"       = var.project_name
+    "Environment"   = var.environment
+    "ManagedBy"     = "Terraform"
+    "PSA-Compliant" = "true"
   })
 }
